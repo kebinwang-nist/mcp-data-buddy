@@ -1,0 +1,20 @@
+[
+  {
+    "name": "cdc",
+    "namespace": "cdc",
+    "enabled": true,
+    "description": "Dataset reads from CDC open data (data.cdc.gov, Socrata SODA API).",
+    "endpoints": {
+      "base_url": "https://data.cdc.gov"
+    }
+  },
+  {
+    "name": "fda",
+    "namespace": "fda",
+    "enabled": true,
+    "description": "Drug and food data from openFDA (api.fda.gov, Elasticsearch-based REST API).",
+    "endpoints": {
+      "base_url": "https://api.fda.gov"
+    }
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "rules": [
+    {
+      "name": "pii",
+      "type": "pii",
+      "enabled": true,
+      "description": "Detect personal data in tool arguments and results.",
+      "detectors": ["ssn", "email", "phone", "credit_card", "ip_address"],
+      "custom_patterns": {},
+      "on_request": "log",
+      "on_response": "redact",
+      "tools": null,
+      "exclude_tools": [],
+      "ai_check": {
+        "enabled": false,
+        "kinds": ["person_name", "street_address", "date_of_birth"],
+        "on_error": "block",
+        "max_chars": 20000,
+        "timeout_seconds": 30
+      }
+    }
+  ]
+}
