@@ -2,11 +2,7 @@
 
 GSA MCP Server and SI Agent Government Hackathon, **Dataset Access Server** track.
 
-Authors: Kebin Wang and Yan Zhang (team MCP Data Buddy).
-
-Repository: <https://github.com/kebinwang-nist/mcp-data-buddy>
-
-This is the narration for the 7-slide deck in [deck.html](deck.html). Each segment below matches one slide. The narration is 369 words, which takes about 2.5 minutes at a normal speaking pace. That leaves roughly half of each segment for the visuals to play without narration, so speak slowly and pause on each slide. To record, open the deck in a browser, press **Present**, and move to the next slide at each segment's start time. Turn on **Narration** in the deck's toolbar to read the script under each slide.
+This is the narration for the 7-slide video deck in [deck.html](deck.html). The 19-slide submission deck, which follows GSA's sample deliverable deck, is [mcp-data-buddy-deliverable.pptx](mcp-data-buddy-deliverable.pptx). Each segment below matches one slide. The narration is 369 words, which takes about 2.5 minutes at a normal speaking pace. That leaves roughly half of each segment for the visuals to play without narration, so speak slowly and pause on each slide. To record, open the deck in a browser, press **Present**, and move to the next slide at each segment's start time. Turn on **Narration** in the deck's toolbar to read the script under each slide.
 
 ## Timeline
 
@@ -17,14 +13,14 @@ This is the narration for the 7-slide deck in [deck.html](deck.html). Each segme
 | 1:15–2:00 | What it is | MCP in one line, then AI client → gateway → CDC and FDA servers → official data |
 | 2:00–3:00 | What it can do | Split screen: 6 CDC topics and 9 FDA endpoints, with example questions |
 | 3:00–3:50 | Built-in privacy protection | A tool result before and after the gateway, with detectors and actions |
-| 3:50–4:30 | Demo | A chat window with two recorded questions and answers |
-| 4:30–5:00 | Wrap-up | Three recap points, then the repository link |
+| 3:50–4:30 | Demo | One query with masked PII data and two complicated queries, in a chat window |
+| 4:30–5:00 | Wrap-up | Three recap points, then how to try it |
 
 ## Segments
 
 ### 0:00–0:30 · Hook
 
-**Visual:** A search box with "Has lidocaine been recalled?", next to three portal cards: an openFDA query URL in Elasticsearch syntax, a data.cdc.gov SoQL URL, and the openFDA field reference (535 fields across 9 endpoints). The left side shows the project name, a one-line promise and the authors.
+**Visual:** A search box with "Has lidocaine been recalled?", next to three portal cards: an openFDA query URL in Elasticsearch syntax, a data.cdc.gov SoQL URL, and the openFDA field reference (535 fields across 9 endpoints). The left side shows the project name and a one-line promise.
 
 **Narration:** "What if you could ask an AI, in plain English, whether a drug has been recalled, or which CDC datasets track RSV? And what if it answered using real, official data, without exposing anyone's personal information? That's what mcp-data-buddy does."
 
@@ -42,7 +38,7 @@ This is the narration for the 7-slide deck in [deck.html](deck.html). Each segme
 
 ### 2:00–3:00 · What it can do
 
-**Visual:** CDC on the left: 305 assets across six topics, from the National Center for Health Statistics (207) to public health infrastructure (2). FDA on the right: nine endpoints with record counts, from 21,054,159 drug adverse events to 1,585 drug shortage records. Example questions on both sides, and a note on the optional openFDA key.
+**Visual:** CDC on the left: 305 assets in the six topics this project covers, from the National Center for Health Statistics (207) to public health infrastructure (2). FDA on the right: nine endpoints with record counts, from 21,054,159 drug adverse events to 1,585 drug shortage records. Example questions on both sides, and a note on the optional openFDA key.
 
 **Narration:** "On the CDC side, the assistant can discover datasets by topic, such as vaccination coverage or smoking rates, and then query them. On the FDA side, it can look up drug adverse events, labeling, the NDC directory, the Orange Book, recalls and shortages. It also covers food recalls and food adverse events. Both sources are free, and an API key is only needed for higher FDA rate limits."
 
@@ -54,22 +50,23 @@ This is the narration for the 7-slide deck in [deck.html](deck.html). Each segme
 
 ### 3:50–4:30 · Demo
 
-**Visual:** A chat window with two recorded questions, the tool calls behind each, and a shortened answer.
+**Visual:** A line stating that the demo shows one query with masked PII data and two complicated queries, then a chat window with the three recorded questions, the tool calls behind each, and a shortened answer.
 
-- "Are there any current shortages for lidocaine?" took 5 tool calls and 18 seconds. The answer: yes, 87 entries, all marked "Current", from 10 manufacturers, led by Fresenius Kabi (32) and Hospira/Pfizer (26).
-- "Which CDC datasets cover respiratory viruses?" took 4 tool calls and 14 seconds. The answer grouped more than 30 datasets into core respiratory virus data, deaths, vaccination and influenza research.
+- **Masked PII:** "What is the FDA contact info for food recall?" took 1 tool call and 8 seconds. The model noted that the recall data has no FDA contacts and wrote four phone numbers from its own knowledge. The answer filter masked all four as `[REDACTED:PHONE]`. These are FDA's public hotlines, not personal data: a regex can't tell a personal line from an agency's, so the default masks both, and `"on_answer": "log"` keeps them.
+- **Complicated query:** "Are there any current shortages for lidocaine?" took 5 tool calls and 18 seconds. The answer: yes, 87 entries, all marked "Current", from 10 manufacturers, led by Fresenius Kabi (32) and Hospira/Pfizer (26), with supply reasons and recovery dates.
+- **Complicated query across both agencies:** "Is nirsevimab (Beyfortus) in shortage according to FDA, and which CDC datasets track RSV immunization of infants?" took 5 tool calls (3 FDA, 2 CDC) and 12 seconds. The answer: no shortage entry, plus three CDC infant immunization datasets, with which one is current.
 
-**Narration:** "Let's see it in action. I ask, 'Are there any current shortages for this drug?' The assistant picks the FDA shortages endpoint, runs the query and summarizes the results. Next I ask, 'Which CDC datasets cover respiratory viruses?' It lists them, and I can ask follow-up questions on any one."
+**Narration:** "Let's see it in action. The demo shows one query with masked personal data and two complicated queries. First I ask, 'What is the FDA contact info for food recall?' The phone numbers in the answer come back masked. Next I ask, 'Are there any current shortages for lidocaine?' The assistant picks the FDA shortages endpoint, runs several queries and summarizes 87 listings. Finally, one question spans both agencies: is nirsevimab in shortage, and which CDC datasets track RSV immunization of infants? It checks FDA and CDC and answers both parts."
 
 ### 4:30–5:00 · Wrap-up
 
-**Visual:** Three recap points (trusted data through conversation, privacy built in, easy to extend), then the repository link, the commands to try it and the authors.
+**Visual:** Three recap points (trusted data through conversation, privacy built in, easy to extend), then the commands to try it.
 
 **Narration:** "To recap: trusted public health data through conversation, privacy protection built in, and a design that makes adding new data sources easy. Check out the project on GitHub, and try it with your own questions. Thanks for watching."
 
 ## Recording a live demo instead
 
-The demo slide shows runs recorded on 23 November 2026 with Claude Sonnet 5.5 through an OpenAI-compatible endpoint. To record the chat live, start the web client from the project root and ask the same two questions:
+The demo slide shows runs recorded on 23 November 2026 with Claude Sonnet 5.5 through an OpenAI-compatible endpoint. To record the chat live, start the web client from the project root and ask the same three questions:
 
 ```powershell
 uv run python -m client.main     # opens http://127.0.0.1:8080
@@ -87,4 +84,4 @@ Model behavior varies between runs, so a live run may make different tool calls 
 
 **How hard is it to add another agency?** Copy `servers/cdc` for a Socrata portal or `servers/fda` for a REST API, add an entry to `server_config.json`, and generate the skills. The gateway, chat loop and web client don't change.
 
-**How was it tested?** 57 automated tests pass. For openFDA, every usage tip in the skills was checked against the live API, 28 example queries ran while the skills were built, and retry behavior was tested with a stubbed transport: a persistent 503 makes four attempts, waiting 1, 2 and 4 seconds.
+**How was it tested?** 57 automated tests pass. For openFDA, every usage tip in the skills was checked against the live API, 28 example queries ran while the skills were built, and openFDA retry behavior was tested with a stubbed transport: a persistent 503 makes four attempts, waiting 1, 2 and 4 seconds. The CDC server doesn't retry yet. A 15-question evaluation against the live APIs, run 3 times, passed 45 of 45 trials with the tools; the same model without tools passed 10 of 45, and a second judge model agreed with every verdict. See [docs/evaluation-report.md](../evaluation-report.md).

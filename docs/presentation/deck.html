@@ -182,7 +182,7 @@ ul.clean li::before { content: ""; position: absolute; left: 0; top: .62em; widt
 .chat { flex: 1; min-height: 0; border: 1px solid var(--rule); border-radius: 6px; display: flex; flex-direction: column; overflow: hidden; }
 .chat-top { display: flex; justify-content: space-between; gap: 1em; padding: calc(var(--u) * .7) calc(var(--u) * 1.4); border-bottom: 1px solid var(--rule); font-size: calc(var(--u) * 1.15); color: var(--muted); background: var(--code); }
 .chat-top b { color: var(--ink); }
-.chat-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.4); flex: 1; }
+.chat-body { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(var(--u) * 1.6); padding: calc(var(--u) * 1.4); flex: 1; }
 .turn { display: grid; gap: calc(var(--u) * .8); align-content: start; min-width: 0; }
 .bubble-user { justify-self: end; background: var(--user-bubble); color: var(--user-text); border-radius: 14px 14px 2px 14px; padding: calc(var(--u) * .7) calc(var(--u) * 1.2); font-size: calc(var(--u) * 1.45); max-width: 92%; }
 .calls { display: flex; flex-wrap: wrap; gap: calc(var(--u) * .4); align-items: center; font-size: calc(var(--u) * 1.05); color: var(--muted); }
@@ -254,7 +254,7 @@ body.presenting .present-nav { display: flex; }
           <div class="brand">MCP <span>Data Buddy</span></div>
           <h1>Ask official health data a question in plain English.</h1>
           <p class="small muted">Drug recalls, shortages and adverse events from openFDA. Vaccination, respiratory virus and smoking data from CDC. Personal information stays out of the answer.</p>
-          <p class="byline">Kebin Wang and Yan Zhang · GSA MCP Server &amp; SI Agent Government Hackathon</p>
+          <p class="byline">GSA MCP Server &amp; SI Agent Government Hackathon</p>
         </div>
         <div class="search-scene" aria-label="Illustration: one plain question versus the portals and query syntax it takes today">
           <div class="searchbox"><span class="glass" aria-hidden="true"></span><span>Has lidocaine been recalled?</span></div>
@@ -263,7 +263,7 @@ body.presenting .present-nav { display: flex; }
             <div class="q">/drug/enforcement.json?search=openfda.generic_name:"lidocaine"+AND+report_date:[20250101+TO+20251231]</div>
           </div>
           <div class="portal">
-            <div class="host">data.cdc.gov <span>SoQL, 305 assets</span></div>
+            <div class="host">data.cdc.gov <span>SoQL, 4x4 dataset ids</span></div>
             <div class="q">/resource/whhs-7a5d.json?$select=…&amp;$where=…&amp;$group=…&amp;$order=…</div>
           </div>
           <div class="portal">
@@ -295,7 +295,7 @@ body.presenting .present-nav { display: flex; }
               <dt>API</dt><dd><code>/resource/vjzj-u7u8.json</code></dd>
               <dt>Query</dt><dd><code>$select</code> <code>$where</code> <code>$group</code> <code>$q</code></dd>
             </dl>
-            <p class="small muted">One of 305 CDC assets across 6 topics. Each has a 4x4 id and its own column names.</p>
+            <p class="small muted">One of 305 assets in the 6 CDC topics this project covers. Each has a 4x4 id and its own column names.</p>
           </div>
         </div>
         <div class="stack">
@@ -369,7 +369,7 @@ body.presenting .present-nav { display: flex; }
       <div class="eyebrow">What it can do</div>
       <div class="split">
         <div class="side">
-          <div class="side-head"><h3>CDC</h3><span>data.cdc.gov · 305 assets</span></div>
+          <div class="side-head"><h3>CDC</h3><span>data.cdc.gov · 305 assets in 6 topics</span></div>
           <table class="rows">
             <tbody>
               <tr><td>National Center for Health Statistics</td><td class="n">207</td></tr>
@@ -459,33 +459,48 @@ body.presenting .present-nav { display: flex; }
   <div class="stage"><div class="slide">
     <div class="slide-body">
       <div class="eyebrow">Demo</div>
-      <div class="chat" aria-label="Chat window with two recorded questions">
+      <p class="small">The demo shows <b>one query with masked PII data</b> and <b>two complicated queries</b>.</p>
+      <div class="chat" aria-label="Chat window with three recorded questions">
         <div class="chat-top"><b>MCP Data Buddy</b><span>Recorded 23 Nov 2026 · answers shortened</span></div>
         <div class="chat-body">
           <div class="turn">
-            <div class="bubble-user">Are there any current shortages for lidocaine?</div>
-            <div class="calls"><code>fda_list_datasets</code><span>→</span><code>fda_get_dataset</code><span>×4</span><span class="chip">5 calls · 18 s</span></div>
+            <span class="eyebrow">Masked PII</span>
+            <div class="bubble-user">What is the FDA contact info for food recall?</div>
+            <div class="calls"><code>fda_describe_dataset</code><span class="chip">1 call · 8 s</span></div>
             <div class="bubble-ai">
-              <p><b>Yes. The FDA drug shortage database lists lidocaine as currently in shortage.</b> It has 87 lidocaine entries, all marked "Current", last updated 19–20 Nov 2026.</p>
+              <p>The openFDA food recall data has no FDA contact details. These come from general knowledge:</p>
               <ul>
-                <li>Mostly injectable lidocaine: plain, with epinephrine, and premixed with dextrose.</li>
-                <li>From 10 manufacturers, led by Fresenius Kabi (32) and Hospira/Pfizer (26).</li>
-                <li>Hospira expects recovery of some products between March and September 2027.</li>
+                <li>FDA information line: 1-888-INFO-FDA (<span class="redact">[REDACTED:PHONE]</span>)</li>
+                <li>Emergency Operations Center: <span class="redact">[REDACTED:PHONE]</span></li>
+                <li>USDA Meat &amp; Poultry Hotline: <span class="redact">[REDACTED:PHONE]</span></li>
+              </ul>
+              <p class="more">These are FDA's public hotlines, written from the model's own knowledge. A regex can't tell a personal line from an agency's, so the default masks both. Set <code>on_answer</code> to <code>log</code> to keep them.</p>
+            </div>
+          </div>
+          <div class="turn">
+            <span class="eyebrow">Complicated query</span>
+            <div class="bubble-user">Are there any current shortages for lidocaine?</div>
+            <div class="calls"><code>fda_*</code><span>×5</span><span class="chip">5 calls · 18 s</span></div>
+            <div class="bubble-ai">
+              <p><b>Yes.</b> 87 lidocaine entries, all "Current", updated 19–20 Nov 2026.</p>
+              <ul>
+                <li>Mostly injectable: plain, with epinephrine, and with dextrose.</li>
+                <li>10 manufacturers, led by Fresenius Kabi (32) and Hospira/Pfizer (26).</li>
+                <li>Hospira: manufacturing delay, recovery March–September 2027.</li>
               </ul>
             </div>
           </div>
           <div class="turn">
-            <div class="bubble-user">Which CDC datasets cover respiratory viruses?</div>
-            <div class="calls"><code>cdc_list_datasets</code><span>×4</span><span class="chip">4 calls · 14 s</span></div>
+            <span class="eyebrow">Complicated query · CDC + FDA</span>
+            <div class="bubble-user">Is nirsevimab (Beyfortus) in shortage according to FDA, and which CDC datasets track RSV immunization of infants?</div>
+            <div class="calls"><code>fda_*</code><span>×3</span><code>cdc_*</code><span>×2</span><span class="chip">5 calls · 12 s</span></div>
             <div class="bubble-ai">
-              <p>The CDC datasets on respiratory viruses fall into four groups.</p>
+              <p><b>Shortage status: no.</b> openFDA drug/shortages has no nirsevimab or Beyfortus entry.</p>
               <ul>
-                <li><code>vjzj-u7u8</code> NSSP Emergency Department Respiratory Daily, about 311,000 rows.</li>
-                <li><code>4bc2-bbpq</code> Provisional Percent of Deaths for COVID-19, Influenza, and RSV, weekly.</li>
-                <li><code>qeq7-f3ir</code> RSV vaccination coverage and intent among adults, weekly.</li>
-                <li><code>cr56-k9wj</code> Influenza A measurements from infected ferrets (NCIRD).</li>
+                <li><code>vhcj-3k53</code> infants &lt;8 months with a monoclonal antibody dose, monthly.</li>
+                <li><code>4bdk-kyzv</code> nirsevimab, &lt;8 months (archive, 2025).</li>
+                <li><code>ku7p-zn4c</code> nirsevimab, &lt;20 months (archive, 2024).</li>
               </ul>
-              <p class="more">…and 30+ more. “I can query any of these datasets, for example to pull recent trends.”</p>
             </div>
           </div>
         </div>
@@ -493,7 +508,7 @@ body.presenting .present-nav { display: flex; }
     </div>
     <footer class="slide-foot"><span>Demo</span><span>3:50–4:30</span></footer>
   </div></div>
-  <aside class="notes"><h4><span>Narration</span><span>3:50–4:30</span></h4><p>Let's see it in action. I ask, "Are there any current shortages for this drug?" The assistant picks the FDA shortages endpoint, runs the query and summarizes the results. Next I ask, "Which CDC datasets cover respiratory viruses?" It lists them, and I can ask follow-up questions on any one.</p></aside>
+  <aside class="notes"><h4><span>Narration</span><span>3:50–4:30</span></h4><p>Let's see it in action. The demo shows one query with masked personal data and two complicated queries. First I ask, "What is the FDA contact info for food recall?" The phone numbers in the answer come back masked. Next I ask, "Are there any current shortages for lidocaine?" The assistant picks the FDA shortages endpoint, runs several queries and summarizes 87 listings. Finally, one question spans both agencies: is nirsevimab in shortage, and which CDC datasets track RSV immunization of infants? It checks FDA and CDC and answers both parts.</p></aside>
 </section>
 
 <!-- 7 Wrap-up -->
@@ -508,9 +523,7 @@ body.presenting .present-nav { display: flex; }
         <div><h3>Easy to extend</h3><p>A new agency is a server folder and one config entry. The gateway and clients don't change.</p></div>
       </div>
       <div class="repo">
-        <a href="https://github.com/kebinwang-nist/mcp-data-buddy">github.com/kebinwang-nist/mcp-data-buddy</a>
         <span class="try">Try it with your own questions: <code>uv sync</code>, then <code>uv run python -m client.main</code></span>
-        <span class="try">Kebin Wang and Yan Zhang</span>
       </div>
     </div>
     <footer class="slide-foot"><span>Wrap-up</span><span>4:30–5:00</span></footer>
