@@ -1,9 +1,9 @@
 {
   "summary": {
     "started_utc": "2026-11-23T21-25-08Z",
-    "chat_model": "oism-asd-azure_ai/claude-sonnet-5-5",
-    "judge_model": "oism-asd-azure_ai/claude-sonnet-5-5",
-    "second_judge_model": "oism-asd-azure_ai/claude-haiku-5-5",
+    "chat_model": "claude-sonnet-5-5",
+    "judge_model": "claude-sonnet-5-5",
+    "second_judge_model": "claude-haiku-5-5",
     "cases": 15,
     "repeats": 3,
     "trials": 45,
