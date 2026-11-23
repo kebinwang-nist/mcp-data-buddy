@@ -9,6 +9,7 @@
       "custom_patterns": {},
       "on_request": "log",
       "on_response": "redact",
+      "on_answer": "redact",
       "tools": null,
       "exclude_tools": [],
       "ai_check": {

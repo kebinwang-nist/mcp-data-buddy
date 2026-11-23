@@ -1,0 +1,595 @@
+<title>MCP Data Buddy Deck</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a scroll of 16:9 slide cards (reflowing at phone width) with a one-at-a-time Present mode for recording. Type is sized in slide-width units so slides scale as a whole. */
+:root {
+  --paper: #EEF2F5;
+  --slide: #FFFFFF;
+  --ink: #13202C;
+  --muted: #566577;
+  --rule: #D3DBE3;
+  --accent: #0B6B66;
+  --accent-soft: #E0F0EE;
+  --code: #F2F5F8;
+  --warn: #8F5200;
+  --warn-soft: #FBEFDD;
+  --redact-bg: #13202C;
+  --redact-fg: #AEBBC8;
+  --user-bubble: #13202C;
+  --user-text: #FFFFFF;
+  --font-display: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0C1218; --slide: #151F29; --ink: #E4EBF1; --muted: #98A7B6; --rule: #283746;
+    --accent: #55C4B9; --accent-soft: #143634; --code: #0F171F; --warn: #F0B35C; --warn-soft: #3A2A12;
+    --redact-bg: #000000; --redact-fg: #7F8E9D; --user-bubble: #2B3B4A; --user-text: #E4EBF1; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0C1218; --slide: #151F29; --ink: #E4EBF1; --muted: #98A7B6; --rule: #283746;
+  --accent: #55C4B9; --accent-soft: #143634; --code: #0F171F; --warn: #F0B35C; --warn-soft: #3A2A12;
+  --redact-bg: #000000; --redact-fg: #7F8E9D; --user-bubble: #2B3B4A; --user-text: #E4EBF1; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+
+/* toolbar */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px; justify-content: space-between;
+  max-width: 1120px; margin: 0 auto; padding-block: 14px; border-bottom: 1px solid var(--rule);
+}
+.bar-title { font-weight: 700; font-size: 15px; letter-spacing: .01em; }
+.bar-title span { color: var(--muted); font-weight: 400; }
+.bar-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.btn { font: 600 14px/1 var(--font-body); color: var(--slide); background: var(--accent); border: 0; border-radius: 6px; padding: 10px 16px; cursor: pointer; }
+.btn:focus-visible, .toggle input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toggle { display: inline-flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
+.toggle input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+
+/* deck */
+.deck { max-width: 1120px; margin: 24px auto 0; display: grid; gap: 32px; }
+.frame { display: grid; gap: 12px; scroll-margin-top: 80px; }
+.stage {
+  container-type: inline-size; aspect-ratio: 16 / 9; max-width: 100%;
+  background: var(--slide); border: 1px solid var(--rule); border-radius: 4px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 1px 2px rgba(19,32,44,.06), 0 8px 24px rgba(19,32,44,.06);
+}
+.slide {
+  --u: 1cqw;
+  flex: 1; display: flex; flex-direction: column; gap: calc(var(--u) * 2);
+  padding: calc(var(--u) * 4) calc(var(--u) * 5) calc(var(--u) * 2.4);
+  font-size: calc(var(--u) * 1.75); line-height: 1.45;
+}
+.slide-body { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: calc(var(--u) * 1.8); }
+.slide-foot {
+  display: flex; justify-content: space-between; gap: 1em; font-size: calc(var(--u) * 1.15);
+  color: var(--muted); letter-spacing: .04em; text-transform: uppercase; font-variant-numeric: tabular-nums;
+  border-top: 1px solid var(--rule); padding-top: calc(var(--u) * 1.1);
+}
+.eyebrow { font-size: calc(var(--u) * 1.2); font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); }
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; }
+h1 { font-size: calc(var(--u) * 5); line-height: 1.04; font-weight: 800; letter-spacing: -.025em; }
+h2 { font-size: calc(var(--u) * 3.3); line-height: 1.1; font-weight: 700; letter-spacing: -.015em; }
+h3 { font-size: calc(var(--u) * 1.9); line-height: 1.2; font-weight: 700; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: calc(var(--u) * 1.4); line-height: 1.45; }
+code, .mono { font-family: var(--font-mono); font-size: .86em; }
+code { background: var(--code); padding: .05em .3em; border-radius: 3px; overflow-wrap: anywhere; }
+ul.clean { margin: 0; padding: 0; list-style: none; display: grid; gap: calc(var(--u) * .8); }
+ul.clean li { padding-left: 1.1em; position: relative; }
+ul.clean li::before { content: ""; position: absolute; left: 0; top: .62em; width: .45em; height: 2px; background: var(--accent); }
+.redact {
+  display: inline-block; background: var(--redact-bg); color: var(--redact-fg); font-family: var(--font-mono);
+  font-size: .8em; letter-spacing: .04em; padding: .1em .5em; border-radius: 2px; white-space: nowrap;
+}
+.chip { display: inline-block; background: var(--accent-soft); color: var(--accent); font-weight: 700; padding: .2em .7em; border-radius: 99px; font-size: calc(var(--u) * 1.25); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.chips { display: flex; flex-wrap: wrap; gap: calc(var(--u) * .6); }
+
+/* 1 hook */
+.hook { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: calc(var(--u) * 4); flex: 1; align-items: center; }
+.hook-copy { display: grid; gap: calc(var(--u) * 2); align-content: center; }
+.brand { font-family: var(--font-display); font-weight: 800; font-size: calc(var(--u) * 2.1); letter-spacing: -.01em; }
+.brand span { color: var(--accent); }
+.byline { font-size: calc(var(--u) * 1.35); color: var(--muted); }
+.search-scene { display: grid; gap: calc(var(--u) * 1); position: relative; }
+.searchbox {
+  display: flex; align-items: center; gap: calc(var(--u) * 1); border: 2px solid var(--ink); border-radius: 99px;
+  padding: calc(var(--u) * 1) calc(var(--u) * 1.6); font-size: calc(var(--u) * 1.6); background: var(--slide);
+}
+.searchbox .glass { width: calc(var(--u) * 1.5); height: calc(var(--u) * 1.5); border: 2px solid var(--muted); border-radius: 50%; position: relative; flex: none; }
+.searchbox .glass::after { content: ""; position: absolute; width: 2px; height: calc(var(--u) * .7); background: var(--muted); right: calc(var(--u) * -.3); bottom: calc(var(--u) * -.55); transform: rotate(-45deg); }
+.portal { border: 1px solid var(--rule); border-radius: 4px; background: var(--code); padding: calc(var(--u) * .8) calc(var(--u) * 1.1); font-size: calc(var(--u) * 1.2); display: grid; gap: .25em; }
+.portal .host { font-weight: 700; font-size: calc(var(--u) * 1.15); display: flex; justify-content: space-between; gap: 1em; }
+.portal .host span { color: var(--warn); font-weight: 600; }
+.portal .q { font-family: var(--font-mono); color: var(--muted); overflow-wrap: anywhere; }
+.portal:nth-child(3) { margin-left: calc(var(--u) * 2); }
+.portal:nth-child(4) { margin-left: calc(var(--u) * 4); }
+
+/* 2 problem */
+.problem { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: calc(var(--u) * 3); flex: 1; min-height: 0; }
+.dataset-card { border: 1px solid var(--rule); border-radius: 4px; overflow: hidden; display: grid; align-content: start; }
+.dataset-card .head { background: var(--ink); color: var(--slide); padding: calc(var(--u) * 1) calc(var(--u) * 1.3); font-size: calc(var(--u) * 1.15); display: flex; justify-content: space-between; gap: 1em; }
+.dataset-card .head b { font-weight: 700; }
+.dataset-card .inner { padding: calc(var(--u) * 1.2) calc(var(--u) * 1.3); display: grid; gap: calc(var(--u) * .8); }
+.dataset-card .name { font-weight: 700; font-size: calc(var(--u) * 1.65); line-height: 1.25; }
+.meta { display: grid; grid-template-columns: auto 1fr; gap: calc(var(--u) * .35) calc(var(--u) * 1.4); font-size: calc(var(--u) * 1.25); font-variant-numeric: tabular-nums; }
+.meta dt { color: var(--muted); }
+.meta dd { margin: 0; }
+.json { margin: 0; background: var(--code); border: 1px solid var(--rule); border-radius: 4px; padding: calc(var(--u) * 1) calc(var(--u) * 1.2); font-family: var(--font-mono); font-size: calc(var(--u) * 1.15); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.json .k { color: var(--accent); }
+.json-label { font-size: calc(var(--u) * 1.1); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.stack { display: grid; gap: calc(var(--u) * .7); align-content: start; min-width: 0; }
+.pain { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(var(--u) * 1.6); }
+.pain div { border-top: 2px solid var(--ink); padding-top: calc(var(--u) * .8); font-size: calc(var(--u) * 1.35); }
+.pain b { display: block; font-size: calc(var(--u) * 1.5); }
+
+/* 3 architecture */
+.flow { display: grid; grid-template-columns: 1fr auto 1.25fr auto 1.2fr auto 1fr; align-items: center; gap: calc(var(--u) * 1); }
+.lane { display: grid; gap: calc(var(--u) * .6); align-content: center; min-width: 0; }
+.lane-head { font-size: calc(var(--u) * 1.1); font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+.node { border: 1px solid var(--rule); border-radius: 4px; padding: calc(var(--u) * .8) calc(var(--u) * 1); font-size: calc(var(--u) * 1.3); line-height: 1.35; background: var(--slide); min-width: 0; }
+.node b { display: block; font-size: calc(var(--u) * 1.5); }
+.node.gate { background: var(--ink); color: var(--slide); border-color: var(--ink); padding-block: calc(var(--u) * 1.4); }
+.node.server { background: var(--accent-soft); border-color: transparent; }
+.node.source { background: var(--code); font-family: var(--font-mono); font-size: calc(var(--u) * 1.25); }
+.link { color: var(--accent); font-size: calc(var(--u) * 2.2); font-weight: 700; }
+.mcp-def { display: grid; grid-template-columns: auto 1fr; gap: calc(var(--u) * 1.6); align-items: center; background: var(--code); border-radius: 4px; padding: calc(var(--u) * 1.2) calc(var(--u) * 1.6); }
+.mcp-def .tag { font-family: var(--font-display); font-weight: 800; font-size: calc(var(--u) * 2.6); color: var(--accent); }
+.mcp-def p { font-size: calc(var(--u) * 1.45); }
+
+/* 4 capabilities */
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: calc(var(--u) * 3); flex: 1; min-height: 0; }
+.side { display: grid; gap: calc(var(--u) * 1); align-content: start; min-width: 0; }
+.side-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; border-bottom: 2px solid var(--ink); padding-bottom: calc(var(--u) * .5); }
+.side-head h3 { font-size: calc(var(--u) * 2.1); }
+.side-head span { font-family: var(--font-mono); font-size: calc(var(--u) * 1.2); color: var(--muted); }
+.rows { width: 100%; border-collapse: collapse; font-size: calc(var(--u) * 1.28); font-variant-numeric: tabular-nums; }
+.rows td { padding: calc(var(--u) * .32) 0; border-bottom: 1px solid var(--rule); vertical-align: baseline; }
+.rows td.n { text-align: right; color: var(--muted); padding-left: 1em; white-space: nowrap; }
+.ask { display: grid; gap: calc(var(--u) * .5); }
+.ask p { font-size: calc(var(--u) * 1.3); border-left: 3px solid var(--accent); padding-left: calc(var(--u) * 1); font-style: italic; }
+.footnote { font-size: calc(var(--u) * 1.3); color: var(--muted); }
+
+/* 5 privacy */
+.filter { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: calc(var(--u) * 1.6); align-items: center; }
+.filter .gate-col { display: grid; justify-items: center; gap: calc(var(--u) * .5); }
+.filter .gate-bar { width: calc(var(--u) * 9); background: var(--ink); color: var(--slide); border-radius: 4px; padding: calc(var(--u) * 1.2) calc(var(--u) * .8); text-align: center; font-weight: 700; font-size: calc(var(--u) * 1.35); line-height: 1.3; }
+.filter .arrow { color: var(--accent); font-weight: 700; font-size: calc(var(--u) * 1.8); }
+.hl { background: var(--warn-soft); color: var(--warn); font-weight: 600; padding: 0 .2em; border-radius: 2px; }
+.privacy-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(var(--u) * 2.4); }
+.privacy-grid > div { display: grid; gap: calc(var(--u) * .7); align-content: start; border-top: 2px solid var(--ink); padding-top: calc(var(--u) * .9); }
+.privacy-grid h3 { font-size: calc(var(--u) * 1.6); }
+.privacy-grid p { font-size: calc(var(--u) * 1.3); }
+.illustrative { font-size: calc(var(--u) * 1.05); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+
+/* 6 demo chat */
+.chat { flex: 1; min-height: 0; border: 1px solid var(--rule); border-radius: 6px; display: flex; flex-direction: column; overflow: hidden; }
+.chat-top { display: flex; justify-content: space-between; gap: 1em; padding: calc(var(--u) * .7) calc(var(--u) * 1.4); border-bottom: 1px solid var(--rule); font-size: calc(var(--u) * 1.15); color: var(--muted); background: var(--code); }
+.chat-top b { color: var(--ink); }
+.chat-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: calc(var(--u) * 2.4); padding: calc(var(--u) * 1.4); flex: 1; }
+.turn { display: grid; gap: calc(var(--u) * .8); align-content: start; min-width: 0; }
+.bubble-user { justify-self: end; background: var(--user-bubble); color: var(--user-text); border-radius: 14px 14px 2px 14px; padding: calc(var(--u) * .7) calc(var(--u) * 1.2); font-size: calc(var(--u) * 1.45); max-width: 92%; }
+.calls { display: flex; flex-wrap: wrap; gap: calc(var(--u) * .4); align-items: center; font-size: calc(var(--u) * 1.05); color: var(--muted); }
+.calls code { font-size: calc(var(--u) * 1.05); }
+.bubble-ai { background: var(--slide); border: 1px solid var(--rule); border-radius: 14px 14px 14px 2px; padding: calc(var(--u) * 1) calc(var(--u) * 1.2); font-size: calc(var(--u) * 1.28); line-height: 1.45; display: grid; gap: calc(var(--u) * .6); }
+.bubble-ai ul { margin: 0; padding-left: 1.1em; display: grid; gap: .15em; }
+.bubble-ai .more { color: var(--muted); font-size: calc(var(--u) * 1.15); }
+
+/* 7 wrap-up */
+.recap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: calc(var(--u) * 2.4); }
+.recap div { display: grid; gap: calc(var(--u) * .7); align-content: start; border-top: 3px solid var(--accent); padding-top: calc(var(--u) * 1.1); }
+.recap h3 { font-size: calc(var(--u) * 2.1); }
+.recap p { font-size: calc(var(--u) * 1.4); color: var(--muted); }
+.repo { margin-top: auto; display: grid; gap: calc(var(--u) * .6); background: var(--ink); color: var(--slide); border-radius: 6px; padding: calc(var(--u) * 1.8) calc(var(--u) * 2.2); }
+.repo a { color: var(--slide); font-family: var(--font-mono); font-size: calc(var(--u) * 2.2); font-weight: 600; overflow-wrap: anywhere; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+.repo .try { font-size: calc(var(--u) * 1.35); opacity: .8; }
+.repo .try code { background: transparent; color: inherit; padding: 0; }
+
+/* notes */
+.notes { background: var(--slide); border: 1px solid var(--rule); border-radius: 4px; padding: 14px 18px; font-size: 15px; line-height: 1.6; max-width: 72ch; }
+.notes h4 { margin: 0 0 6px; font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); display: flex; gap: 12px; }
+.notes p { margin: 0; }
+body:not(.show-notes) .notes { display: none; }
+
+/* present mode */
+body.presenting { overflow: hidden; }
+body.presenting .bar, body.presenting .notes, body.presenting .frame { display: none; }
+body.presenting .frame.current {
+  display: flex; align-items: center; justify-content: center; position: fixed; inset: 0; z-index: 20; background: var(--paper);
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) max(12px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 12px) max(12px, env(safe-area-inset-left, 0px));
+}
+body.presenting .frame.current .stage { width: min(100%, calc((100vh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) * 16 / 9)); }
+.present-nav { position: fixed; z-index: 30; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); display: none; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); opacity: .35; transition: opacity .2s; }
+.present-nav:hover, .present-nav:focus-within { opacity: 1; }
+body.presenting .present-nav { display: flex; }
+.present-nav button { font: 600 13px/1 var(--font-body); background: var(--slide); color: var(--ink); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+.present-nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* phone width */
+@media (max-width: 760px) {
+  body:not(.presenting) .stage { aspect-ratio: auto; }
+  body:not(.presenting) .slide { --u: 8.4px; padding: 26px 20px 16px; }
+  body:not(.presenting) h1 { font-size: 34px; }
+  body:not(.presenting) :is(.hook, .problem, .split, .filter, .chat-body, .recap, .privacy-grid) { grid-template-columns: minmax(0, 1fr); }
+  body:not(.presenting) .pain { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body:not(.presenting) .flow { grid-template-columns: minmax(0, 1fr); }
+  body:not(.presenting) .link, body:not(.presenting) .filter .arrow { transform: rotate(90deg); justify-self: start; padding-left: 8px; }
+  body:not(.presenting) .portal:nth-child(n) { margin-left: 0; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<header class="bar">
+  <div class="bar-title">MCP Data Buddy <span>· 5-minute hackathon video · 7 segments</span></div>
+  <div class="bar-actions">
+    <label class="toggle"><input type="checkbox" id="notes-toggle"><span>Narration</span></label>
+    <button class="btn" id="present-btn" type="button">Present</button>
+  </div>
+</header>
+
+<main class="deck" id="deck">
+
+<!-- 1 Hook -->
+<section class="frame" id="s1">
+  <div class="stage"><div class="slide">
+    <div class="slide-body">
+      <div class="hook">
+        <div class="hook-copy">
+          <div class="brand">MCP <span>Data Buddy</span></div>
+          <h1>Ask official health data a question in plain English.</h1>
+          <p class="small muted">Drug recalls, shortages and adverse events from openFDA. Vaccination, respiratory virus and smoking data from CDC. Personal information stays out of the answer.</p>
+          <p class="byline">Kebin Wang and Yan Zhang · GSA MCP Server &amp; SI Agent Government Hackathon</p>
+        </div>
+        <div class="search-scene" aria-label="Illustration: one plain question versus the portals and query syntax it takes today">
+          <div class="searchbox"><span class="glass" aria-hidden="true"></span><span>Has lidocaine been recalled?</span></div>
+          <div class="portal">
+            <div class="host">api.fda.gov <span>Elasticsearch syntax</span></div>
+            <div class="q">/drug/enforcement.json?search=openfda.generic_name:"lidocaine"+AND+report_date:[20250101+TO+20251231]</div>
+          </div>
+          <div class="portal">
+            <div class="host">data.cdc.gov <span>SoQL, 305 assets</span></div>
+            <div class="q">/resource/whhs-7a5d.json?$select=…&amp;$where=…&amp;$group=…&amp;$order=…</div>
+          </div>
+          <div class="portal">
+            <div class="host">open.fda.gov field reference <span>535 fields, 9 endpoints</span></div>
+            <div class="q">patient.drug.openfda.brand_name.exact · seriousnessdeath · reactionmeddrapt</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide-foot"><span>Hook</span><span>0:00–0:30</span></footer>
+  </div></div>
+  <aside class="notes"><h4><span>Narration</span><span>0:00–0:30</span></h4><p>What if you could ask an AI, in plain English, whether a drug has been recalled, or which CDC datasets track RSV? And what if it answered using real, official data, without exposing anyone's personal information? That's what mcp-data-buddy does.</p></aside>
+</section>
+
+<!-- 2 Problem -->
+<section class="frame" id="s2">
+  <div class="stage"><div class="slide">
+    <div class="slide-body">
+      <div class="eyebrow">The problem</div>
+      <h2>Open data, but every portal speaks its own language</h2>
+      <div class="problem">
+        <div class="dataset-card" aria-label="A CDC dataset page">
+          <div class="head"><b>data.cdc.gov</b><span>vjzj-u7u8</span></div>
+          <div class="inner">
+            <div class="name">NSSP Emergency Department Respiratory Daily</div>
+            <dl class="meta">
+              <dt>Rows</dt><dd>311,584</dd>
+              <dt>Updated</dt><dd>2026-11-09</dd>
+              <dt>API</dt><dd><code>/resource/vjzj-u7u8.json</code></dd>
+              <dt>Query</dt><dd><code>$select</code> <code>$where</code> <code>$group</code> <code>$q</code></dd>
+            </dl>
+            <p class="small muted">One of 305 CDC assets across 6 topics. Each has a 4x4 id and its own column names.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <span class="json-label">Raw row from data.cdc.gov</span>
+<pre class="json">[{<span class="k">"year"</span>: "2003", <span class="k">"state"</span>: "Guam",
+  <span class="k">"condition"</span>: "Adults who are current smokers",
+  <span class="k">"yes"</span>: "34", <span class="k">"no"</span>: "66",
+  <span class="k">"location_1"</span>: {<span class="k">"human_address"</span>: "{\"address\": \"\", \"city\": \"\", \"state\": \"Guam\", \"zip\": \"\"}"}}]</pre>
+          <span class="json-label">Raw record from api.fda.gov/drug/event</span>
+<pre class="json">{<span class="k">"safetyreportid"</span>: "10003304", <span class="k">"receivedate"</span>: "20140312",
+ <span class="k">"patient"</span>: {<span class="k">"reaction"</span>: [{<span class="k">"reactionmeddrapt"</span>: "Drug hypersensitivity"}]}}</pre>
+        </div>
+      </div>
+      <div class="pain">
+        <div><b>Many portals</b>Separate sites for CDC and FDA data</div>
+        <div><b>Own query syntax</b>SoQL on one, Elasticsearch on the other</div>
+        <div><b>Cryptic fields</b><code>reactionmeddrapt</code>, numbers stored as text</div>
+        <div><b>Needs skill</b>AI could help, given safe, reliable access</div>
+      </div>
+    </div>
+    <footer class="slide-foot"><span>The problem</span><span>0:30–1:15</span></footer>
+  </div></div>
+  <aside class="notes"><h4><span>Narration</span><span>0:30–1:15</span></h4><p>The CDC and FDA publish a huge amount of open data. But it's spread across many portals. Each has its own query syntax, and the field names are cryptic. Even simple questions take time and technical skill. AI assistants could help, but they need a safe, reliable way to reach this data.</p></aside>
+</section>
+
+<!-- 3 What it is -->
+<section class="frame" id="s3">
+  <div class="stage"><div class="slide">
+    <div class="slide-body">
+      <div class="eyebrow">What it is</div>
+      <h2>Small MCP servers behind one gateway</h2>
+      <div class="mcp-def">
+        <span class="tag">MCP</span>
+        <p><b>Model Context Protocol:</b> a standard way for AI assistants to use outside tools. Any MCP client can discover and call the tools a server offers.</p>
+      </div>
+      <div class="flow" aria-label="Architecture: AI client to gateway to CDC and FDA servers">
+        <div class="lane">
+          <span class="lane-head">AI client</span>
+          <div class="node"><b>Claude Desktop</b></div>
+          <div class="node"><b>VS Code</b></div>
+          <div class="node"><b>Project chat client</b>Command line or web page</div>
+        </div>
+        <span class="link" aria-hidden="true">→</span>
+        <div class="lane">
+          <span class="lane-head">Gateway</span>
+          <div class="node gate"><b>One entry point</b>Combines the servers into 6 tools and checks every call for personal data</div>
+        </div>
+        <span class="link" aria-hidden="true">→</span>
+        <div class="lane">
+          <span class="lane-head">Servers</span>
+          <div class="node server"><b>CDC server</b>list · describe · get datasets</div>
+          <div class="node server"><b>FDA server</b>list · describe · get datasets</div>
+        </div>
+        <span class="link" aria-hidden="true">→</span>
+        <div class="lane">
+          <span class="lane-head">Official data</span>
+          <div class="node source">data.cdc.gov</div>
+          <div class="node source">api.fda.gov</div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide-foot"><span>What it is</span><span>1:15–2:00</span></footer>
+  </div></div>
+  <aside class="notes"><h4><span>Narration</span><span>1:15–2:00</span></h4><p>mcp-data-buddy is a set of small servers built on the Model Context Protocol, or MCP. MCP is a standard way for AI assistants to use outside tools. Here, one server handles CDC data and another handles FDA data. A gateway sits in front and combines them. It connects to tools like Claude Desktop or VS Code, or to the project's own chat client.</p></aside>
+</section>
+
+<!-- 4 What it can do -->
+<section class="frame" id="s4">
+  <div class="stage"><div class="slide">
+    <div class="slide-body">
+      <div class="eyebrow">What it can do</div>
+      <div class="split">
+        <div class="side">
+          <div class="side-head"><h3>CDC</h3><span>data.cdc.gov · 305 assets</span></div>
+          <table class="rows">
+            <tbody>
+              <tr><td>National Center for Health Statistics</td><td class="n">207</td></tr>
+              <tr><td>Vaccinations</td><td class="n">87</td></tr>
+              <tr><td>Respiratory viruses</td><td class="n">3</td></tr>
+              <tr><td>Immunization and respiratory diseases</td><td class="n">3</td></tr>
+              <tr><td>Smoking and tobacco</td><td class="n">3</td></tr>
+              <tr><td>Public health infrastructure</td><td class="n">2</td></tr>
+            </tbody>
+          </table>
+          <div class="ask">
+            <p>“Which CDC datasets track RSV hospitalizations?”</p>
+            <p>“List the vaccination coverage datasets for adults.”</p>
+          </div>
+        </div>
+        <div class="side">
+          <div class="side-head"><h3>FDA</h3><span>api.fda.gov · 9 endpoints</span></div>
+          <table class="rows">
+            <tbody>
+              <tr><td>Drug adverse events</td><td class="n">21,054,159</td></tr>
+              <tr><td>Drug labeling</td><td class="n">264,929</td></tr>
+              <tr><td>NDC directory</td><td class="n">138,538</td></tr>
+              <tr><td>Orange Book</td><td class="n">48,990</td></tr>
+              <tr><td>Drugs@FDA approvals</td><td class="n">29,468</td></tr>
+              <tr><td>Drug recalls</td><td class="n">18,166</td></tr>
+              <tr><td>Drug shortages</td><td class="n">1,585</td></tr>
+              <tr><td>Food adverse events</td><td class="n">151,589</td></tr>
+              <tr><td>Food recalls</td><td class="n">29,609</td></tr>
+            </tbody>
+          </table>
+          <div class="ask">
+            <p>“Which lidocaine products are in shortage?”</p>
+          </div>
+        </div>
+      </div>
+      <p class="footnote">Both sources are free. An optional openFDA key raises the limit from 1,000 to 120,000 requests a day. Counts are assets per CDC topic and records per FDA endpoint.</p>
+    </div>
+    <footer class="slide-foot"><span>What it can do</span><span>2:00–3:00</span></footer>
+  </div></div>
+  <aside class="notes"><h4><span>Narration</span><span>2:00–3:00</span></h4><p>On the CDC side, the assistant can discover datasets by topic, such as vaccination coverage or smoking rates, and then query them. On the FDA side, it can look up drug adverse events, labeling, the NDC directory, the Orange Book, recalls and shortages. It also covers food recalls and food adverse events. Both sources are free, and an API key is only needed for higher FDA rate limits.</p></aside>
+</section>
+
+<!-- 5 Privacy -->
+<section class="frame" id="s5">
+  <div class="stage"><div class="slide">
+    <div class="slide-body">
+      <div class="eyebrow">Built-in privacy protection</div>
+      <h2>The gateway checks every request, every result and the final answer</h2>
+      <div class="filter" aria-label="Illustration: a tool result before and after the gateway">
+        <div class="stack">
+          <span class="illustrative">Tool result in (illustrative values)</span>
+<pre class="json">{<span class="k">"generic_name"</span>: "Lidocaine Hydrochloride Injection",
+ <span class="k">"status"</span>: "Current",
+ <span class="k">"contact_info"</span>: "Call <span class="hl">555-010-0142</span> or <span class="hl">shortages@example.com</span>"}</pre>
+        </div>
+        <div class="gate-col"><span class="arrow" aria-hidden="true">→</span><div class="gate-bar">Gateway<br>PII rule</div><span class="arrow" aria-hidden="true">→</span></div>
+        <div class="stack">
+          <span class="illustrative">What the AI sees</span>
+<pre class="json">{<span class="k">"generic_name"</span>: "Lidocaine Hydrochloride Injection",
+ <span class="k">"status"</span>: "Current",
+ <span class="k">"contact_info"</span>: "Call <span class="redact">[REDACTED:PHONE]</span> or <span class="redact">[REDACTED:EMAIL]</span>"}</pre>
+        </div>
+      </div>
+      <div class="privacy-grid">
+        <div>
+          <h3>Finds</h3>
+          <div class="chips"><span class="chip">SSN</span><span class="chip">Email</span><span class="chip">Phone</span><span class="chip">Credit card</span><span class="chip">IP address</span></div>
+        </div>
+        <div>
+          <h3>Acts</h3>
+          <p><b>Block</b>, <b>redact</b> or <b>log</b>, set separately for requests, results and the answer in one config file. Logs record the kind and count, never the value.</p>
+        </div>
+        <div>
+          <h3>Optional AI check</h3>
+          <p>A second model looks for names, street addresses and birth dates. If that check fails, the call is blocked by default.</p>
+        </div>
+      </div>
+      <p class="footnote">In a recorded run on 23 Nov 2026, one shortage result had 86 phone numbers and 1 email redacted before the model saw it.</p>
+    </div>
+    <footer class="slide-foot"><span>Privacy protection</span><span>3:00–3:50</span></footer>
+  </div></div>
+  <aside class="notes"><h4><span>Narration</span><span>3:00–3:50</span></h4><p>Health data raises privacy concerns, so the gateway scans every request and response. It looks for Social Security numbers, emails, phone numbers, credit cards and IP addresses. It can block, redact or log what it finds. An optional second AI check also catches names, street addresses and birth dates. Privacy is part of the design, not an afterthought.</p></aside>
+</section>
+
+<!-- 6 Demo -->
+<section class="frame" id="s6">
+  <div class="stage"><div class="slide">
+    <div class="slide-body">
+      <div class="eyebrow">Demo</div>
+      <div class="chat" aria-label="Chat window with two recorded questions">
+        <div class="chat-top"><b>MCP Data Buddy</b><span>Recorded 23 Nov 2026 · answers shortened</span></div>
+        <div class="chat-body">
+          <div class="turn">
+            <div class="bubble-user">Are there any current shortages for lidocaine?</div>
+            <div class="calls"><code>fda_list_datasets</code><span>→</span><code>fda_get_dataset</code><span>×4</span><span class="chip">5 calls · 18 s</span></div>
+            <div class="bubble-ai">
+              <p><b>Yes. The FDA drug shortage database lists lidocaine as currently in shortage.</b> It has 87 lidocaine entries, all marked "Current", last updated 19–20 Nov 2026.</p>
+              <ul>
+                <li>Mostly injectable lidocaine: plain, with epinephrine, and premixed with dextrose.</li>
+                <li>From 10 manufacturers, led by Fresenius Kabi (32) and Hospira/Pfizer (26).</li>
+                <li>Hospira expects recovery of some products between March and September 2027.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="turn">
+            <div class="bubble-user">Which CDC datasets cover respiratory viruses?</div>
+            <div class="calls"><code>cdc_list_datasets</code><span>×4</span><span class="chip">4 calls · 14 s</span></div>
+            <div class="bubble-ai">
+              <p>The CDC datasets on respiratory viruses fall into four groups.</p>
+              <ul>
+                <li><code>vjzj-u7u8</code> NSSP Emergency Department Respiratory Daily, about 311,000 rows.</li>
+                <li><code>4bc2-bbpq</code> Provisional Percent of Deaths for COVID-19, Influenza, and RSV, weekly.</li>
+                <li><code>qeq7-f3ir</code> RSV vaccination coverage and intent among adults, weekly.</li>
+                <li><code>cr56-k9wj</code> Influenza A measurements from infected ferrets (NCIRD).</li>
+              </ul>
+              <p class="more">…and 30+ more. “I can query any of these datasets, for example to pull recent trends.”</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer class="slide-foot"><span>Demo</span><span>3:50–4:30</span></footer>
+  </div></div>
+  <aside class="notes"><h4><span>Narration</span><span>3:50–4:30</span></h4><p>Let's see it in action. I ask, "Are there any current shortages for this drug?" The assistant picks the FDA shortages endpoint, runs the query and summarizes the results. Next I ask, "Which CDC datasets cover respiratory viruses?" It lists them, and I can ask follow-up questions on any one.</p></aside>
+</section>
+
+<!-- 7 Wrap-up -->
+<section class="frame" id="s7">
+  <div class="stage"><div class="slide">
+    <div class="slide-body">
+      <div class="eyebrow">Wrap-up</div>
+      <h2>To recap</h2>
+      <div class="recap">
+        <div><h3>Trusted data through conversation</h3><p>Answers come from data.cdc.gov and api.fda.gov, with the dataset named.</p></div>
+        <div><h3>Privacy built in</h3><p>One gateway checks every tool call and the final answer.</p></div>
+        <div><h3>Easy to extend</h3><p>A new agency is a server folder and one config entry. The gateway and clients don't change.</p></div>
+      </div>
+      <div class="repo">
+        <a href="https://github.com/kebinwang-nist/mcp-data-buddy">github.com/kebinwang-nist/mcp-data-buddy</a>
+        <span class="try">Try it with your own questions: <code>uv sync</code>, then <code>uv run python -m client.main</code></span>
+        <span class="try">Kebin Wang and Yan Zhang</span>
+      </div>
+    </div>
+    <footer class="slide-foot"><span>Wrap-up</span><span>4:30–5:00</span></footer>
+  </div></div>
+  <aside class="notes"><h4><span>Narration</span><span>4:30–5:00</span></h4><p>To recap: trusted public health data through conversation, privacy protection built in, and a design that makes adding new data sources easy. Check out the project on GitHub, and try it with your own questions. Thanks for watching.</p></aside>
+</section>
+
+</main>
+
+<div class="present-nav" aria-label="Slide controls">
+  <span id="pos">1 / 7</span>
+  <button type="button" id="prev-btn">Previous</button>
+  <button type="button" id="next-btn">Next</button>
+  <button type="button" id="exit-btn">Exit (Esc)</button>
+</div>
+
+<script>
+(function () {
+  var frames = Array.prototype.slice.call(document.querySelectorAll('.frame'));
+  var idx = 0;
+  var body = document.body;
+  var notes = document.getElementById('notes-toggle');
+
+  try { if (localStorage.getItem('deck-notes') === '1') { notes.checked = true; body.classList.add('show-notes'); } } catch (e) {}
+  notes.addEventListener('change', function () {
+    body.classList.toggle('show-notes', notes.checked);
+    try { localStorage.setItem('deck-notes', notes.checked ? '1' : '0'); } catch (e) {}
+  });
+
+  function show(i) {
+    idx = Math.max(0, Math.min(frames.length - 1, i));
+    frames.forEach(function (f, n) { f.classList.toggle('current', n === idx); });
+    document.getElementById('pos').textContent = (idx + 1) + ' / ' + frames.length;
+  }
+  function currentFromScroll() {
+    var best = 0, bestDist = Infinity;
+    frames.forEach(function (f, n) {
+      var d = Math.abs(f.getBoundingClientRect().top - 80);
+      if (d < bestDist) { bestDist = d; best = n; }
+    });
+    return best;
+  }
+  function enter() {
+    show(currentFromScroll());
+    body.classList.add('presenting');
+    try { var p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+  }
+  function exit() {
+    body.classList.remove('presenting');
+    try { if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(function () {}); } catch (e) {}
+    frames[idx].scrollIntoView({ block: 'start' });
+  }
+
+  document.getElementById('present-btn').addEventListener('click', enter);
+  document.getElementById('prev-btn').addEventListener('click', function () { show(idx - 1); });
+  document.getElementById('next-btn').addEventListener('click', function () { show(idx + 1); });
+  document.getElementById('exit-btn').addEventListener('click', exit);
+  document.addEventListener('fullscreenchange', function () {
+    if (!document.fullscreenElement && body.classList.contains('presenting')) { body.classList.remove('presenting'); frames[idx].scrollIntoView({ block: 'start' }); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!body.classList.contains('presenting')) {
+      if (e.key === 'p' && !e.metaKey && !e.ctrlKey && e.target.tagName !== 'INPUT') enter();
+      return;
+    }
+    if (['ArrowRight', 'PageDown', ' ', 'Enter'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx + 1); }
+    else if (['ArrowLeft', 'PageUp', 'Backspace'].indexOf(e.key) >= 0) { e.preventDefault(); show(idx - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(frames.length - 1);
+    else if (e.key === 'Escape') exit();
+  });
+  document.addEventListener('click', function (e) {
+    if (!body.classList.contains('presenting') || e.target.closest('.present-nav') || e.target.closest('a')) return;
+    show(e.clientX > window.innerWidth / 3 ? idx + 1 : idx - 1);
+  });
+
+  if (/^#s\d+$/.test(location.hash)) {
+    var target = document.getElementById(location.hash.slice(1));
+    if (target) target.scrollIntoView({ block: 'start' });
+  }
+})();
+</script>

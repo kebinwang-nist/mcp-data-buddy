@@ -23,7 +23,8 @@ from fastmcp import Client
 from openai import AsyncOpenAI
 
 from config import get_ai_settings
-from server import mcp
+from gateway import load_answer_filters
+from server import mcp, mcp_unchecked
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 logger = logging.getLogger("app")
@@ -33,6 +34,43 @@ _MAX_TOOL_ITERATIONS = 25
 # Tool results are resent with every request; cap each so a few wide table
 # pages can't push the request past the gateway's size limit (HTTP 413).
 _MAX_TOOL_RESULT_CHARS = 20_000
+
+# The gateway rules only see tool calls; these apply the pii rule's
+# ``on_answer`` action to the model's final answer as well.
+_ANSWER_FILTERS = load_answer_filters()
+
+
+# A question that starts with exactly this text (case-sensitive, no leading
+# spaces) skips the pii rule: tool arguments, tool results and the answer.
+NO_PII_CHECK_PREFIX = "NO PII CHECK"
+
+
+def _split_pii_opt_out(user_prompt: str) -> tuple[bool, str]:
+    """Return whether ``user_prompt`` opts out of the PII check, and the question to send.
+
+    The prefix, and any spaces or punctuation right after it (``.``, ``:``, ``-``,
+    ``,`` ...), are removed from the question so the model doesn't see them.
+    """
+    rest = user_prompt.removeprefix(NO_PII_CHECK_PREFIX)
+    # Require a word boundary, so "NO PII CHECKS" or "NO PII CHECKER" don't count.
+    if rest == user_prompt or (rest and (rest[0].isalnum() or rest[0] == "_")):
+        return False, user_prompt
+    return True, _strip_leading_separators(rest)
+
+
+def _strip_leading_separators(text: str) -> str:
+    """Remove leading whitespace and punctuation, keeping the first letter, digit or quote."""
+    index = 0
+    while index < len(text) and not (text[index].isalnum() or text[index] in "\"'([{"):
+        index += 1
+    return text[index:]
+
+
+async def _filter_answer(answer: str) -> str:
+    """Return ``answer`` after every answer filter from ``gateway_config.json``."""
+    for answer_filter in _ANSWER_FILTERS:
+        answer = await answer_filter.apply(answer)
+    return answer
 
 
 def _mcp_tools_to_openai_schema(tools: list) -> list[dict]:
@@ -88,8 +126,14 @@ async def run_chat(user_prompt: str) -> str:
         user_prompt: The user's question.
 
     Returns:
-        The model's final natural-language answer.
+        The model's final natural-language answer, after the ``pii`` rule's
+        ``on_answer`` action (by default, PII is redacted). If ``user_prompt``
+        starts with ``NO PII CHECK``, the pii rule is skipped entirely.
     """
+    skip_pii, user_prompt = _split_pii_opt_out(user_prompt)
+    if skip_pii:
+        logger.warning("Question starts with %r: skipping the PII check", NO_PII_CHECK_PREFIX)
+    gateway = mcp_unchecked if skip_pii else mcp
     settings = get_ai_settings()
 
     # OpenAI-compatible client pointed at the configured endpoint.
@@ -99,7 +143,7 @@ async def run_chat(user_prompt: str) -> str:
     )
 
     # Connect to the MCP server in-process and discover its tools.
-    async with Client(mcp) as mcp_client:
+    async with Client(gateway) as mcp_client:
         tools = await mcp_client.list_tools()
         openai_tools = _mcp_tools_to_openai_schema(tools)
         logger.info("Discovered %d MCP tool(s): %s", len(tools), [t.name for t in tools])
@@ -127,7 +171,8 @@ async def run_chat(user_prompt: str) -> str:
 
             # No tool calls: the model produced its final answer.
             if not choice.tool_calls:
-                return choice.content or ""
+                answer = choice.content or ""
+                return answer if skip_pii else await _filter_answer(answer)
 
             # Record the assistant's tool-call request, then execute each call.
             messages.append(
